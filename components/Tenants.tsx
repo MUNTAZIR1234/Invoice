@@ -21,6 +21,8 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
     phone: '',
     address: '',
     propertyId: '',
+    // Fix: Added missing status to initial state
+    status: 'Active',
   });
 
   const handleOpenModal = (tenant?: Tenant) => {
@@ -29,7 +31,8 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
       setFormData(tenant);
     } else {
       setEditingTenant(null);
-      setFormData({ name: '', email: '', phone: '', address: '', propertyId: '' });
+      // Fix: Added missing status when resetting form
+      setFormData({ name: '', email: '', phone: '', address: '', propertyId: '', status: 'Active' });
     }
     setIsModalOpen(true);
   };
@@ -66,6 +69,7 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
           if (match) propId = match.id;
         }
 
+        // Fix: Added missing status to imported tenants
         newTenants.push({
           id: `t${Date.now()}-${i}`,
           name: data.name || 'Unknown',
@@ -73,6 +77,7 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
           phone: data.phone || '',
           address: data.address || '',
           propertyId: propId || (properties.length > 0 ? properties[0].id : ''),
+          status: (data.status as any) || 'Active',
         });
       }
 
@@ -90,6 +95,7 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
     if (editingTenant) {
       setTenants(prev => prev.map(t => t.id === editingTenant.id ? { ...t, ...formData } as Tenant : t));
     } else {
+      // Fix: Added missing status to new tenant object
       const tenant: Tenant = {
         id: `t${Date.now()}`,
         name: formData.name!,
@@ -97,6 +103,7 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
         phone: formData.phone!,
         address: formData.address || '',
         propertyId: formData.propertyId!,
+        status: formData.status || 'Active',
       };
       setTenants(prev => [...prev, tenant]);
     }

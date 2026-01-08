@@ -11,17 +11,13 @@ interface AIAssistantProps {
 export const AIAssistant: React.FC<AIAssistantProps> = ({ tenants, invoices, properties }) => {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([
-    { role: 'ai', text: 'Welcome to QUEENS CHAMBERS AI Assistant. I have live access to your tenants, invoices, and assets. How can I help you optimize your portfolio today?' }
+    { role: 'ai', text: 'Welcome to the QUEENS CHAMBERS Intelligent Assistant. I have analyzed your portfolio of ' + properties.length + ' assets. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSend = async (e?: React.FormEvent) => {
@@ -36,31 +32,25 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ tenants, invoices, pro
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const context = {
-        stats: {
+        portfolio: {
           totalProperties: properties.length,
-          occupiedProperties: tenants.length,
-          totalRevenue: invoices.reduce((s, i) => s + i.totalAmount, 0),
-        },
-        properties: properties.map(p => ({ name: p.name, type: p.type })),
-        tenants: tenants.map(t => ({ name: t.name, property: properties.find(p => p.id === t.propertyId)?.name })),
+          tenants: tenants.length,
+          revenue: invoices.reduce((s, i) => s + i.totalAmount, 0),
+          types: properties.reduce((acc: any, p) => { acc[p.type] = (acc[p.type] || 0) + 1; return acc; }, {})
+        }
       };
 
-      const prompt = `System: You are the intelligent portfolio assistant for Queens Chambers. 
-Context Data: ${JSON.stringify(context)}.
-Question: ${userText}`;
-      
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: prompt,
+        contents: `Context: ${JSON.stringify(context)}. User: ${userText}`,
         config: {
-          systemInstruction: "You are professional, concise, and insightful. Format numerical values with ₹. Use bullet points for structured information. If data is missing, state it politely. Focus on real estate and financial efficiency."
+          systemInstruction: "You are an elite property manager. Be professional, direct, and data-driven. Use ₹ for currency. Provide insights on occupancy, rental yield, and tenant relations. Format with clean bullet points."
         }
       });
 
-      setMessages(prev => [...prev, { role: 'ai', text: response.text || "I'm sorry, I couldn't process your request." }]);
+      setMessages(prev => [...prev, { role: 'ai', text: response.text || "I apologize, I could not process that request." }]);
     } catch (error) {
-      console.error("Gemini Assistant Error:", error);
-      setMessages(prev => [...prev, { role: 'ai', text: "Service temporary unavailable. Please verify your connection." }]);
+      setMessages(prev => [...prev, { role: 'ai', text: "Portfolio synchronization failed. Please check your network." }]);
     } finally {
       setLoading(false);
     }
@@ -69,63 +59,50 @@ Question: ${userText}`;
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col space-y-6">
       <header>
-        <h2 className="text-4xl font-black text-slate-900 tracking-tighter">AI Portfolio Analyst</h2>
-        <p className="text-slate-500 mt-1 font-medium">Real-time insights powered by Gemini 3 Flash.</p>
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight">AI Portfolio Analyst</h2>
+        <p className="text-slate-500 font-medium">Real-time property insights and automation.</p>
       </header>
 
-      <div className="flex-1 bg-white rounded-[2rem] shadow-2xl shadow-indigo-900/5 border border-slate-100 flex flex-col overflow-hidden">
+      <div className="flex-1 bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-900/5 border border-slate-50 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-10 space-y-6 custom-scrollbar">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] px-6 py-4 rounded-2xl text-[13px] leading-relaxed shadow-sm transition-all ${
+              <div className={`max-w-[85%] px-7 py-5 rounded-3xl text-[13px] leading-relaxed shadow-sm ${
                 msg.role === 'user' 
-                  ? 'bg-indigo-600 text-white font-semibold rounded-tr-none' 
+                  ? 'bg-indigo-600 text-white font-bold rounded-tr-none' 
                   : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-100'
               }`}>
-                <p className="whitespace-pre-wrap">{msg.text}</p>
+                {msg.text}
               </div>
             </div>
           ))}
           {loading && (
-            <div className="flex justify-start">
-              <div className="bg-slate-50 px-6 py-4 rounded-2xl rounded-tl-none border border-slate-100 flex gap-2 items-center">
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
-              </div>
+            <div className="flex gap-2 p-4 bg-slate-50 rounded-2xl w-fit animate-pulse">
+              <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+              <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+              <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
             </div>
           )}
           <div ref={chatEndRef} />
         </div>
 
-        <div className="p-8 bg-slate-50/50 border-t border-slate-100">
+        <div className="p-8 bg-slate-50/50 border-t border-slate-50">
           <form onSubmit={handleSend} className="flex gap-4">
             <input 
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Ask for a financial summary or tenant status..."
-              className="flex-1 px-6 py-4 rounded-2xl border border-slate-200 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-sm font-medium shadow-sm bg-white"
+              placeholder="Ask about revenue, vacancies, or draft a notice..."
+              className="flex-1 px-8 py-5 rounded-[1.5rem] bg-white border border-slate-100 outline-none focus:ring-4 focus:ring-indigo-500/10 font-bold transition-all shadow-sm"
               disabled={loading}
             />
             <button 
               type="submit"
               disabled={loading || !input.trim()}
-              className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 disabled:opacity-50 transition-all flex items-center gap-2 active:scale-95 shadow-xl shadow-slate-900/10"
+              className="bg-slate-900 text-white px-10 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-indigo-600 shadow-xl disabled:opacity-50 transition-all active:scale-95"
             >
-              Consult
+              Analyze
             </button>
           </form>
-          <div className="flex gap-2 mt-6 overflow-x-auto no-scrollbar pb-1">
-            {['Revenue Report', 'Occupancy Analysis', 'Draft Rent Reminder'].map(suggest => (
-              <button 
-                key={suggest}
-                onClick={() => setInput(suggest)}
-                className="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-500 hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
-              >
-                {suggest}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     </div>

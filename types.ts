@@ -5,6 +5,8 @@ export interface Property {
   id: string;
   name: string;
   type: PropertyType;
+  address?: string;
+  unitNumber?: string;
 }
 
 export interface Tenant {
@@ -14,6 +16,8 @@ export interface Tenant {
   phone: string;
   address: string;
   propertyId: string;
+  status: 'Active' | 'Former';
+  moveInDate?: string;
 }
 
 export interface InvoiceItem {
@@ -31,6 +35,7 @@ export interface Invoice {
   notes?: string;
   bankDetails?: string;
   billingPeriod: string;
+  invoiceType: 'Rent Invoice' | 'Tax Receipt';
 }
 
 export interface InvoiceSettings {
