@@ -1,7 +1,5 @@
 {
-  "name": "Copy of Copy of Rent Invoicing software",
-  "description": "A comprehensive property management and invoicing platform for landlords to track tenants, manage properties, and automate billing with AI assistance.",
-  "requestFramePermissions": [
-    "camera"
-  ]
+  "name": "QUEENS CHAMBERS - Python Edition",
+  "description": "Professional property management system converted to Python/Streamlit for enhanced data processing and PDF generation.",
+  "requestFramePermissions": []
 }
