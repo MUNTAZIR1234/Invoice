@@ -1,5 +1,5 @@
 {
-  "name": "QUEENS CHAMBERS - Python Edition",
-  "description": "Professional property management system converted to Python/Streamlit for enhanced data processing and PDF generation.",
+  "name": "QUEENS CHAMBERS - Fixed Edition",
+  "description": "Professional property management system with clean Python/Streamlit logic and high-quality PDF invoicing.",
   "requestFramePermissions": []
 }
