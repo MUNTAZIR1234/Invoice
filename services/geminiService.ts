@@ -9,6 +9,7 @@ export const generateCommunication = async (tenantName: string, amount: number) 
   const prompt = `Write a polite and professional message to a tenant named ${tenantName} regarding their latest rental invoice of $${amount}. Format as a short email.`;
   
   try {
+    // Using gemini-3-flash-preview for basic text generation tasks
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
@@ -28,6 +29,7 @@ export const getFinancialInsights = async (data: any) => {
   const prompt = `Analyze this property data and provide 3 key insights for the landlord. Data: ${JSON.stringify(data)}. Focus on portfolio efficiency, occupancy, and asset distribution.`;
   
   try {
+    // Using gemini-3-flash-preview for analysis tasks
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,

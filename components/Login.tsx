@@ -1,215 +1,122 @@
-
 import React, { useState } from 'react';
 
 interface LoginProps {
   onLogin: () => void;
 }
 
-type AuthView = 'login' | 'forgot' | 'success';
-
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [view, setView] = useState<AuthView>('login');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState('');
+  const [pass, setPass] = useState('');
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoverySent, setRecoverySent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    // Simulated authentication check
-    // Credentials: admin / admin123
-    setTimeout(() => {
-      if (username === 'admin' && password === 'admin123') {
-        onLogin();
-      } else {
-        setError('Invalid username or password. Please try again.');
-        setLoading(false);
-      }
-    }, 800);
+    if (user === 'admin' && pass === 'admin123') onLogin();
+    else alert('Invalid credentials. Use admin / admin123');
   };
 
   const handleRecovery = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    // Simulate recovery process
+    setRecoverySent(true);
+    // Simulate API call
     setTimeout(() => {
-      if (email.includes('@')) {
-        setView('success');
-      } else {
-        setError('Please enter a valid email address.');
-      }
-      setLoading(false);
-    }, 1200);
+      setRecoverySent(false);
+      setIsForgotPassword(false);
+      alert('If an account exists for ' + recoveryEmail + ', a reset link has been sent.');
+    }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500 rounded-full blur-[120px]"></div>
-      </div>
-
-      <div className="w-full max-w-md z-10">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-indigo-600 text-white text-4xl mb-6 shadow-2xl shadow-indigo-500/40">
-            🏢
-          </div>
-          <h1 className="text-4xl font-black text-white tracking-tight">QUEENS CHAMBERS</h1>
-          <p className="text-slate-400 mt-2 font-medium">Property Management Portal</p>
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
+      <div className="w-full max-w-md space-y-8 text-center">
+        <div>
+          <h1 className="text-4xl font-black text-indigo-400 tracking-tighter">QUEENS CHAMBERS</h1>
+          <p className="text-slate-500 uppercase tracking-widest text-[10px] font-black mt-2">Management Portal</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
-          <div className="p-10">
-            {view === 'login' && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-                <p className="text-slate-500 text-sm mb-8">Please enter your credentials to access the dashboard.</p>
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {error && (
-                    <div className="p-3 bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold rounded-xl">
-                      ⚠️ {error}
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">👤</span>
-                      <input
-                        type="text"
-                        required
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-900 font-medium"
-                        placeholder="Enter username"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center ml-1">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                      <button 
-                        type="button" 
-                        onClick={() => setView('forgot')}
-                        className="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition-colors"
-                      >
-                        Forgot Password?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔒</span>
-                      <input
-                        type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-900 font-medium"
-                        placeholder="••••••••"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 group disabled:opacity-70 mt-4"
-                  >
-                    {loading ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    ) : (
-                      <>
-                        Sign In to Dashboard
-                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                      </>
-                    )}
-                  </button>
-                </form>
+        <div className="bg-white p-10 rounded-[3rem] shadow-2xl space-y-6 relative overflow-hidden transition-all duration-300">
+          {!isForgotPassword ? (
+            <form onSubmit={handleSubmit} className="space-y-4 animate-in">
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-4">Access ID</label>
+                <input 
+                  placeholder="Username" 
+                  className="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold border border-transparent focus:border-indigo-500 transition-all" 
+                  onChange={e => setUser(e.target.value)} 
+                  required
+                />
               </div>
-            )}
-
-            {view === 'forgot' && (
-              <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Recover Password</h2>
-                <p className="text-slate-500 text-sm mb-8">Enter your registered email address to receive recovery instructions.</p>
-
-                <form onSubmit={handleRecovery} className="space-y-5">
-                  {error && (
-                    <div className="p-3 bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold rounded-xl">
-                      ⚠️ {error}
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">✉️</span>
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-900 font-medium"
-                        placeholder="admin@example.com"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center justify-center gap-2 group disabled:opacity-70 mt-4"
-                  >
-                    {loading ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    ) : (
-                      'Send Recovery Link'
-                    )}
-                  </button>
-
-                  <button 
-                    type="button" 
-                    onClick={() => setView('login')}
-                    className="w-full text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors py-2"
-                  >
-                    Back to Login
-                  </button>
-                </form>
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-4">Secure Key</label>
+                <input 
+                  type="password" 
+                  placeholder="Password" 
+                  className="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold border border-transparent focus:border-indigo-500 transition-all" 
+                  onChange={e => setPass(e.target.value)} 
+                  required
+                />
               </div>
-            )}
-
-            {view === 'success' && (
-              <div className="text-center animate-in zoom-in-95 duration-300">
-                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
-                  ✅
-                </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Check Your Email</h2>
-                <p className="text-slate-500 text-sm mb-8">
-                  We've sent a recovery link to <span className="font-bold text-slate-700">{email}</span>. Please check your inbox and follow the instructions.
-                </p>
+              
+              <div className="text-right px-2">
                 <button 
-                  onClick={() => setView('login')}
-                  className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+                  type="button" 
+                  onClick={() => setIsForgotPassword(true)}
+                  className="text-[10px] font-black uppercase text-indigo-500 hover:text-indigo-700 tracking-widest transition-colors"
                 >
-                  Return to Login
+                  Forgot Password?
                 </button>
               </div>
-            )}
-          </div>
+
+              <button className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all transform active:scale-[0.98]">
+                Sign In
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRecovery} className="space-y-6 animate-in">
+              <div className="space-y-2">
+                <h2 className="text-xl font-black text-slate-800">Reset Access</h2>
+                <p className="text-xs text-slate-400 leading-relaxed px-4">
+                  Enter the email address associated with your administrator account to receive a secure reset link.
+                </p>
+              </div>
+              
+              <input 
+                type="email" 
+                placeholder="registered@email.com" 
+                className="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold border border-transparent focus:border-indigo-500 transition-all" 
+                value={recoveryEmail}
+                onChange={e => setRecoveryEmail(e.target.value)}
+                required
+              />
+
+              <div className="space-y-3">
+                <button 
+                  disabled={recoverySent}
+                  className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50"
+                >
+                  {recoverySent ? 'Sending...' : 'Send Recovery Link'}
+                </button>
+                
+                <button 
+                  type="button" 
+                  onClick={() => setIsForgotPassword(false)}
+                  className="w-full text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-slate-600 transition-colors"
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            </form>
+          )}
           
-          <div className="px-10 py-4 bg-slate-50 border-t border-slate-100 text-center">
-            <p className="text-xs text-slate-400">
-              Authorized access only. System activity is logged.
-            </p>
-          </div>
+          <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Authorized Access Only</p>
+        </div>
+
+        <div className="pt-4">
+          <p className="text-slate-600 text-[10px] font-medium opacity-50 uppercase tracking-[0.2em]">
+            &copy; 2024 Queens Chambers Real Estate Management
+          </p>
         </div>
       </div>
     </div>

@@ -1,24 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { Tenants } from './components/Tenants';
 import { Invoices } from './components/Invoices';
 import { Properties } from './components/Properties';
-import { AIAssistant } from './components/AIAssistant';
-import { SystemSettings } from './components/SystemSettings';
-import { Reports } from './components/Reports';
 import { Expenses } from './components/Expenses';
+import { AIAssistant } from './components/AIAssistant';
+import { Reports } from './components/Reports';
+import { SystemSettings } from './components/SystemSettings';
 import { Login } from './components/Login';
-import { Tenant, Property, Invoice, CompanyInfo, InvoiceSettings, Expense } from './types';
-import { INITIAL_TENANTS, INITIAL_PROPERTIES, INITIAL_INVOICES } from './constants';
-
-const DEFAULT_INVOICE_SETTINGS: InvoiceSettings = {
-  primaryColor: '#4f46e5',
-  fontFamily: 'helvetica',
-  headerLayout: 'standard',
-  showBankDetails: true,
-  showTenantContact: true
-};
+import { Tenant, Property, Invoice, CompanyInfo, Expense } from './types';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -27,54 +18,55 @@ const App: React.FC = () => {
   });
   
   const [tenants, setTenants] = useState<Tenant[]>(() => {
-    try {
-      const saved = localStorage.getItem('tenants');
-      return saved ? JSON.parse(saved) : INITIAL_TENANTS;
-    } catch { return INITIAL_TENANTS; }
+    const saved = localStorage.getItem('tenants');
+    return saved ? JSON.parse(saved) : [];
   });
   
   const [properties, setProperties] = useState<Property[]>(() => {
-    try {
-      const saved = localStorage.getItem('properties');
-      return saved ? JSON.parse(saved) : INITIAL_PROPERTIES;
-    } catch { return INITIAL_PROPERTIES; }
+    const saved = localStorage.getItem('properties');
+    return saved ? JSON.parse(saved) : [];
   });
   
   const [invoices, setInvoices] = useState<Invoice[]>(() => {
-    try {
-      const saved = localStorage.getItem('invoices');
-      return saved ? JSON.parse(saved) : INITIAL_INVOICES;
-    } catch { return INITIAL_INVOICES; }
+    const saved = localStorage.getItem('invoices');
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [expenses, setExpenses] = useState<Expense[]>(() => {
-    try {
-      const saved = localStorage.getItem('expenses');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+    const saved = localStorage.getItem('expenses');
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [company, setCompany] = useState<CompanyInfo>(() => {
-    try {
-      const saved = localStorage.getItem('company');
-      const base = saved ? JSON.parse(saved) : { 
-        name: 'QUEENS CHAMBERS', 
-        address: '5th Floor, Flat A, 89 Maharshi Karve Road, Marine Lines Mumbai - 400020', 
-        email: 'ac.queenschambers@gmail.com' 
-      };
-      return {
-        ...base,
-        invoiceSettings: base.invoiceSettings || DEFAULT_INVOICE_SETTINGS
-      };
-    } catch { 
-      return { 
-        name: 'QUEENS CHAMBERS', 
-        address: '5th Floor, Flat A, 89 Maharshi Karve Road, Marine Lines Mumbai - 400020', 
-        email: 'ac.queenschambers@gmail.com',
-        invoiceSettings: DEFAULT_INVOICE_SETTINGS
-      }; 
-    }
+    const saved = localStorage.getItem('company');
+    return saved ? JSON.parse(saved) : { 
+      name: 'QUEENS CHAMBERS', 
+      address: '5th Floor, Flat A, 89 Maharshi Karve Road, Marine Lines Mumbai - 400020', 
+      email: 'ac.queenschambers@gmail.com' 
+    };
   });
+
+  // Centralized restore function to handle data atomically
+  const handleSystemRestore = useCallback((data: any) => {
+    // 1. Update State
+    if (data.tenants) setTenants(data.tenants);
+    if (data.properties) setProperties(data.properties);
+    if (data.invoices) setInvoices(data.invoices);
+    if (data.expenses) setExpenses(data.expenses);
+    if (data.company) setCompany(data.company);
+    
+    // 2. Persist to LocalStorage immediately
+    localStorage.setItem('tenants', JSON.stringify(data.tenants || []));
+    localStorage.setItem('properties', JSON.stringify(data.properties || []));
+    localStorage.setItem('invoices', JSON.stringify(data.invoices || []));
+    localStorage.setItem('expenses', JSON.stringify(data.expenses || []));
+    localStorage.setItem('company', JSON.stringify(data.company || company));
+
+    // 3. Force a hard reload to ensure React re-initializes with the new data
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  }, [company]);
 
   useEffect(() => {
     localStorage.setItem('tenants', JSON.stringify(tenants));
@@ -85,45 +77,37 @@ const App: React.FC = () => {
     localStorage.setItem('isLoggedIn', isAuthenticated.toString());
   }, [tenants, properties, invoices, expenses, company, isAuthenticated]);
 
-  const handleLogin = () => setIsAuthenticated(true);
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setActiveTab('dashboard');
-  };
-
-  const clearAllData = () => {
-    if (window.confirm("WARNING: This will permanently delete everything. Are you sure?")) {
-      setTenants([]);
-      setProperties([]);
-      setInvoices([]);
-      setExpenses([]);
-      localStorage.clear();
-      setIsAuthenticated(false);
-      setActiveTab('dashboard');
-    }
-  };
-
-  if (!isAuthenticated) return <Login onLogin={handleLogin} />;
+  if (!isAuthenticated) return <Login onLogin={() => setIsAuthenticated(true)} />;
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <Dashboard tenants={tenants} properties={properties} invoices={invoices} />;
+      case 'dashboard': return <Dashboard tenants={tenants} properties={properties} invoices={invoices} expenses={expenses} />;
       case 'tenants': return <Tenants tenants={tenants} properties={properties} setTenants={setTenants} />;
       case 'invoices': return <Invoices invoices={invoices} tenants={tenants} properties={properties} company={company} setInvoices={setInvoices} />;
-      case 'properties': return <Properties properties={properties} setProperties={setProperties} />;
+      case 'properties': return <Properties properties={properties} setProperties={setProperties} tenants={tenants} />;
       case 'expenses': return <Expenses expenses={expenses} properties={properties} setExpenses={setExpenses} />;
-      case 'assistant': return <AIAssistant tenants={tenants} invoices={invoices} properties={properties} />;
       case 'reports': return <Reports tenants={tenants} properties={properties} invoices={invoices} company={company} />;
-      case 'settings': return <SystemSettings onReset={clearAllData} company={company} setCompany={setCompany} />;
-      default: return <Dashboard tenants={tenants} properties={properties} invoices={invoices} />;
+      case 'assistant': return <AIAssistant tenants={tenants} invoices={invoices} properties={properties} />;
+      case 'settings': return (
+        <SystemSettings 
+          company={company} 
+          setCompany={setCompany} 
+          tenants={tenants}
+          properties={properties}
+          invoices={invoices}
+          expenses={expenses}
+          onLogout={() => setIsAuthenticated(false)} 
+          setActiveTab={setActiveTab}
+          onRestore={handleSystemRestore}
+        />
+      );
+      default: return <Dashboard tenants={tenants} properties={properties} invoices={invoices} expenses={expenses} />;
     }
   };
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout}>
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-        {renderContent()}
-      </div>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} onLogout={() => setIsAuthenticated(false)}>
+      {renderContent()}
     </Layout>
   );
 };

@@ -1,4 +1,2 @@
-streamlit
-pandas
-fpdf2
-google-generativeai
+# DEPRECATED: This project is a React-based static web application.
+# Python environment is not required.

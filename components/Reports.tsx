@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Tenant, Property, Invoice, CompanyInfo } from '../types';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface ReportsProps {
   tenants: Tenant[];
@@ -13,9 +12,11 @@ interface ReportsProps {
 
 type ReportType = 'tenants' | 'properties' | 'invoices';
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  const [year, month, day] = dateStr.split('-');
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return 'N/A';
+  const dateParts = dateStr.split('-');
+  if (dateParts.length !== 3) return dateStr;
+  const [year, month, day] = dateParts;
   return `${day}-${month}-${year}`;
 };
 
@@ -43,10 +44,10 @@ export const Reports: React.FC<ReportsProps> = ({ tenants, properties, invoices,
         csvContent += `"${p.name}","${p.type}","${status}"\n`;
       });
     } else if (reportType === 'invoices') {
-      csvContent = "ID,Date,Tenant,Amount,Period\n";
+      csvContent = "ID,Date,Receipt Date,Tenant,Amount,Period,Status\n";
       invoices.forEach(i => {
         const tName = tenants.find(t => t.id === i.tenantId)?.name || 'Unknown';
-        csvContent += `"${i.id}","${formatDate(i.createdAt)}","${tName}","${i.totalAmount}","${i.billingPeriod}"\n`;
+        csvContent += `"${i.id}","${formatDate(i.createdAt)}","${formatDate(i.dateOfReceipt)}","${tName}","${i.totalAmount}","${i.billingPeriod}","${i.status}"\n`;
       });
     }
 
@@ -66,7 +67,6 @@ export const Reports: React.FC<ReportsProps> = ({ tenants, properties, invoices,
     const title = `${reportType.toUpperCase()} REPORT`;
     const date = formatDate(new Date().toISOString().split('T')[0]);
 
-    // Header
     doc.setFontSize(20);
     doc.setTextColor(79, 70, 229);
     doc.text(company.name, 14, 20);
@@ -96,17 +96,18 @@ export const Reports: React.FC<ReportsProps> = ({ tenants, properties, invoices,
         return [p.name, p.type, status];
       });
     } else if (reportType === 'invoices') {
-      head = [['ID', 'Date', 'Tenant', 'Amount', 'Period']];
+      head = [['ID', 'Date', 'Receipt Date', 'Tenant', 'Amount', 'Status']];
       body = invoices.map(i => [
         i.id,
         formatDate(i.createdAt),
+        formatDate(i.dateOfReceipt),
         tenants.find(t => t.id === i.tenantId)?.name || 'Unknown',
         `Rs. ${i.totalAmount.toLocaleString()}`,
-        i.billingPeriod
+        i.status
       ]);
     }
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: 40,
       head: head,
       body: body,
@@ -180,9 +181,10 @@ export const Reports: React.FC<ReportsProps> = ({ tenants, properties, invoices,
               <tr>
                 <th className="p-3 border border-slate-200 text-xs font-bold uppercase">ID</th>
                 <th className="p-3 border border-slate-200 text-xs font-bold uppercase">Date</th>
+                <th className="p-3 border border-slate-200 text-xs font-bold uppercase">Receipt Date</th>
                 <th className="p-3 border border-slate-200 text-xs font-bold uppercase">Tenant</th>
                 <th className="p-3 border border-slate-200 text-xs font-bold uppercase text-right">Amount</th>
-                <th className="p-3 border border-slate-200 text-xs font-bold uppercase">Period</th>
+                <th className="p-3 border border-slate-200 text-xs font-bold uppercase">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -190,9 +192,16 @@ export const Reports: React.FC<ReportsProps> = ({ tenants, properties, invoices,
                 <tr key={i.id}>
                   <td className="p-3 border border-slate-200 text-xs font-mono">{i.id}</td>
                   <td className="p-3 border border-slate-200 text-sm">{formatDate(i.createdAt)}</td>
+                  <td className="p-3 border border-slate-200 text-sm font-bold text-indigo-600">{formatDate(i.dateOfReceipt)}</td>
                   <td className="p-3 border border-slate-200 text-sm">{tenants.find(t => t.id === i.tenantId)?.name || 'Unknown'}</td>
                   <td className="p-3 border border-slate-200 text-sm font-bold text-right">₹{i.totalAmount.toLocaleString()}</td>
-                  <td className="p-3 border border-slate-200 text-sm">{i.billingPeriod}</td>
+                  <td className="p-3 border border-slate-200 text-sm">
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                      i.status === 'Paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {i.status}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
