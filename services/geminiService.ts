@@ -1,15 +1,22 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// Use process.env.API_KEY directly as per guidelines
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Standardize API Key retrieval for both development and production
+const getAI = () => {
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+    throw new Error("Gemini API Key is missing. Please set API_KEY in your environment variables.");
+  }
+  
+  return new GoogleGenAI({ apiKey });
+};
 
 export const generateCommunication = async (tenantName: string, amount: number) => {
   const ai = getAI();
-  const prompt = `Write a polite and professional message to a tenant named ${tenantName} regarding their latest rental invoice of $${amount}. Format as a short email.`;
+  const prompt = `Write a polite and professional message to a tenant named ${tenantName} regarding their latest rental invoice of ₹${amount}. Format as a short email.`;
   
   try {
-    // Using gemini-3-flash-preview for basic text generation tasks
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
@@ -26,10 +33,9 @@ export const generateCommunication = async (tenantName: string, amount: number) 
 
 export const getFinancialInsights = async (data: any) => {
   const ai = getAI();
-  const prompt = `Analyze this property data and provide 3 key insights for the landlord. Data: ${JSON.stringify(data)}. Focus on portfolio efficiency, occupancy, and asset distribution.`;
+  const prompt = `Analyze this property data and provide 3 key insights for the landlord. Data: ${JSON.stringify(data)}. Focus on portfolio efficiency, occupancy, and asset distribution. Use ₹ for currency.`;
   
   try {
-    // Using gemini-3-flash-preview for analysis tasks
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
