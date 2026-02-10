@@ -50,22 +50,22 @@
 <script type="importmap">
 {
   "imports": {
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3",
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
-    "jspdf": "https://esm.sh/jspdf@^4.1.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "jspdf": "https://esm.sh/jspdf@^4.1.0",
+    "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.7",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.7"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3"
   }
 }
 </script>
 </head>
 <body>
   <div id="root"></div>
-  <!-- Vite expects a leading slash for the entry point -->
+  <!-- Vite handles TSX compilation and imports automatically -->
   <script type="module" src="/index.tsx"></script>
   <script>
     if ('serviceWorker' in navigator) {
