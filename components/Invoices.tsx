@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Invoice, Tenant, InvoiceItem, Property, CompanyInfo, InvoiceStatus } from '../types';
 import { jsPDF } from 'jspdf';
@@ -44,6 +45,8 @@ const getAutomatedCycle = () => {
   return "01 April 2026 to 30 September 2026";
 };
 
+const DEFAULT_NOTES = "This invoice is monthly for six month invoice. If you pay full money we will accept.";
+
 const DEFAULT_ITEMS: InvoiceItem[] = [
   { description: 'Rent charges', amount: 0 },
   { description: 'Repair and Municipal tax', amount: 0 },
@@ -59,8 +62,8 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
     billingPeriod: getAutomatedCycle(),
     invoiceType: 'Rent Invoice',
     status: 'Draft',
-    notes: '',
-    dateOfReceipt: new Date().toISOString().split('T')[0]
+    notes: DEFAULT_NOTES,
+    dateOfReceipt: ''
   });
 
   const getNextInvoiceId = () => {
@@ -75,7 +78,19 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
   };
 
   const handleStatusChange = (id: string, newStatus: InvoiceStatus) => {
-    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: newStatus } : inv));
+    setInvoices(prev => prev.map(inv => {
+        if (inv.id === id) {
+            const dateOfReceipt = newStatus === 'Paid' && !inv.dateOfReceipt 
+                ? new Date().toISOString().split('T')[0] 
+                : inv.dateOfReceipt;
+            return { ...inv, status: newStatus, dateOfReceipt };
+        }
+        return inv;
+    }));
+  };
+
+  const handleReceiptDateChange = (id: string, newDate: string) => {
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, dateOfReceipt: newDate } : inv));
   };
 
   const handleEditClick = (invoice: Invoice) => {
@@ -99,8 +114,8 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
       billingPeriod: getAutomatedCycle(),
       invoiceType: 'Rent Invoice',
       status: 'Draft',
-      notes: '',
-      dateOfReceipt: new Date().toISOString().split('T')[0]
+      notes: DEFAULT_NOTES,
+      dateOfReceipt: ''
     });
   };
 
@@ -166,9 +181,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
     doc.text(`Invoice ID: ${invoice.id}`, 140, 60);
     doc.text(`Date: ${formatDateDDMMYYYY(invoice.createdAt)}`, 140, 65);
     doc.text(`Period: ${invoice.billingPeriod}`, 140, 70);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Receipt Date: ${formatDateDDMMYYYY(invoice.dateOfReceipt)}`, 140, 75);
-
+    
     autoTable(doc, {
       startY: nextY + 15,
       head: [['Description', 'Amount']],
@@ -192,7 +205,6 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.text('Notes:', 15, currentY);
-      doc.setFont('helvetica', 'oblique');
       doc.setFontSize(8);
       doc.setTextColor(100, 116, 139);
       const splitNotes = doc.splitTextToSize(invoice.notes, 180);
@@ -254,7 +266,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
           <h2 className="text-3xl font-black text-slate-900">Invoices</h2>
           <p className="text-slate-500 text-sm mt-1">Manage and track rental receivables.</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200">New Invoice</button>
+        <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:scale-105 transition-transform">New Invoice</button>
       </header>
 
       <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -263,8 +275,9 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
             <tr>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">ID</th>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Tenant / Unit</th>
-              <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Date / Receipt</th>
+              <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Creation Date</th>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Status</th>
+              <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Internal Tracking</th>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400 text-right">Amount</th>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400 text-right">Actions</th>
             </tr>
@@ -280,9 +293,8 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                     <p className="font-bold text-slate-800">{tenant?.name || 'Unknown'}</p>
                     <p className="text-[10px] text-slate-400 uppercase tracking-widest">{prop?.name || 'No Unit'}</p>
                   </td>
-                  <td className="px-8 py-5 text-sm font-medium">
-                    <div className="text-slate-500">{formatDateDDMMYYYY(inv.createdAt)}</div>
-                    <div className="text-[10px] text-indigo-500 font-bold uppercase">Received: {formatDateDDMMYYYY(inv.dateOfReceipt)}</div>
+                  <td className="px-8 py-5 text-sm font-medium text-slate-500">
+                    {formatDateDDMMYYYY(inv.createdAt)}
                   </td>
                   <td className="px-8 py-5">
                     <select 
@@ -296,12 +308,24 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                       <option value="Overdue">Overdue</option>
                     </select>
                   </td>
+                  <td className="px-8 py-5">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-tighter">Receipt Date:</span>
+                        <input 
+                            type="date"
+                            value={inv.dateOfReceipt || ''}
+                            onChange={(e) => handleReceiptDateChange(inv.id, e.target.value)}
+                            className="text-xs font-bold text-indigo-600 bg-transparent border-none p-0 outline-none focus:ring-0 cursor-pointer hover:underline"
+                        />
+                        {!inv.dateOfReceipt && (
+                            <span className="text-[9px] text-amber-500 font-bold italic">Not received yet</span>
+                        )}
+                    </div>
+                  </td>
                   <td className="px-8 py-5 text-right font-black text-indigo-600">₹{inv.totalAmount.toLocaleString()}</td>
                   <td className="px-8 py-5 text-right space-x-2">
-                    {inv.status === 'Draft' && (
-                      <button onClick={() => handleEditClick(inv)} className="bg-amber-100 text-amber-700 hover:bg-amber-200 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Edit</button>
-                    )}
-                    <button onClick={() => downloadPDF(inv)} className="bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white text-slate-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">PDF</button>
+                    <button onClick={() => handleEditClick(inv)} className="bg-slate-50 text-slate-500 hover:bg-slate-900 hover:text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Edit</button>
+                    <button onClick={() => downloadPDF(inv)} className="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">PDF</button>
                     <button 
                       onClick={() => handleDeleteClick(inv.id)}
                       className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100"
@@ -314,6 +338,12 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
             })}
           </tbody>
         </table>
+        {invoices.length === 0 && (
+          <div className="py-20 text-center">
+            <p className="text-4xl mb-4">📄</p>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No invoices generated</p>
+          </div>
+        )}
       </div>
 
       {isModalOpen && (
@@ -322,7 +352,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
             <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <div>
                 <h3 className="text-xl font-black">{editingInvoice ? 'Edit Invoice' : 'Generate Invoice'}</h3>
-                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">Cycle: Apr - Sept 2026</p>
+                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">Standard Billing Protocol</p>
               </div>
               <button onClick={closeModal} className="text-slate-400 hover:text-slate-900 transition-colors text-xl">✕</button>
             </div>
@@ -342,18 +372,18 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
               </div>
 
               <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="text-xs font-black uppercase text-slate-400 block mb-2">Date of Receipt of Rent</label>
+                <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                  <label className="text-xs font-black uppercase text-indigo-400 block mb-2">Receipt Date (Tracking Only)</label>
                   <input 
                     type="date" 
-                    required 
-                    className="w-full p-4 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700" 
-                    value={formData.dateOfReceipt} 
+                    className="w-full bg-transparent outline-none font-bold text-indigo-600" 
+                    value={formData.dateOfReceipt || ''} 
                     onChange={e => setFormData({...formData, dateOfReceipt: e.target.value})} 
                   />
+                  <p className="text-[8px] text-indigo-300 font-bold uppercase mt-2">* Not visible on printed invoice</p>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase text-slate-400 block mb-2">Status</label>
+                  <label className="text-xs font-black uppercase text-slate-400 block mb-2">Invoice Status</label>
                   <select 
                     className="w-full p-4 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700" 
                     value={formData.status} 
@@ -414,10 +444,11 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                 <label className="text-xs font-black uppercase text-slate-400 block mb-2">Additional Notes / Remarks</label>
                 <textarea 
                   placeholder="Enter any additional information for the tenant..." 
-                  className="w-full p-4 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none text-sm font-medium text-slate-700 min-h-[80px]" 
+                  className="w-full p-4 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none text-sm font-medium text-slate-700 min-h-[100px]" 
                   value={formData.notes} 
                   onChange={e => setFormData({...formData, notes: e.target.value})}
                 />
+                <p className="text-[9px] text-slate-400 font-bold uppercase mt-2">Visible on PDF Invoice</p>
               </div>
 
               <div className="pt-6 border-t border-slate-100">
