@@ -328,7 +328,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                     <button onClick={() => downloadPDF(inv)} className="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">PDF</button>
                     <button 
                       onClick={() => handleDeleteClick(inv.id)}
-                      className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100"
+                      className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                     >
                       Delete
                     </button>

@@ -189,7 +189,7 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
                   </button>
                   <button 
                     onClick={() => handleDelete(t.id, t.name)}
-                    className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100"
+                    className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                   >
                     Delete
                   </button>
