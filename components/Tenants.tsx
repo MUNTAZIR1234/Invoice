@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Tenant, Property } from '../types';
 
@@ -17,6 +18,12 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
     setEditingTenant(tenant);
     setFormData(tenant);
     setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to remove ${name}? This will remove them from the registry but keep existing invoices.`)) {
+      setTenants(prev => prev.filter(t => t.id !== id));
+    }
   };
 
   const closeModal = () => {
@@ -39,15 +46,10 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
     closeModal();
   };
 
-  /**
-   * Advanced CSV Parser that handles quoted values containing commas.
-   * This prevents addresses like "Flat 5, Building X" from breaking into multiple columns.
-   */
   const parseCSV = (text: string) => {
     const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
     if (lines.length < 2) return [];
     
-    // Simple header split is usually fine for the first line, but let's be safe
     const splitCSVLine = (line: string) => {
       const result = [];
       let current = '';
@@ -90,7 +92,6 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
         const rows = parseCSV(csvText);
         
         const mappedData: Tenant[] = rows.map((row, index) => {
-          // Flexible header matching for common address field names
           const addressValue = row.address || row['billing address'] || row['location'] || row['full address'] || '';
           const propertyIdValue = row.propertyid || row['unit id'] || row['unit'] || '';
           
@@ -107,15 +108,15 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
 
         if (mappedData.length > 0) {
           setTenants(prev => [...prev, ...mappedData]);
-          alert(`Successfully imported ${mappedData.length} tenants. Address mapping validated.`);
+          alert(`Successfully imported ${mappedData.length} tenants.`);
         }
       } catch (err) {
         console.error(err);
-        alert("Error parsing file. Please ensure it is a valid CSV with standard headers: Name, Email, Phone, Address, PropertyID");
+        alert("Error parsing file.");
       }
     };
     reader.readAsText(file);
-    e.target.value = ''; // Reset input
+    e.target.value = '';
   };
 
   return (
@@ -179,12 +180,18 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
                     t.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
                   }`}>{t.status}</span>
                 </td>
-                <td className="px-8 py-5 text-right">
+                <td className="px-8 py-5 text-right space-x-2">
                   <button 
                     onClick={() => handleEditClick(t)}
                     className="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                   >
                     Edit
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(t.id, t.name)}
+                    className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>
