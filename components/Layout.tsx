@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+import { isCloudEnabled } from '../services/supabaseService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -40,7 +42,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
           <div className="flex items-center gap-2 mt-2">
             <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
             <p className="text-[9px] text-slate-500 uppercase tracking-widest font-black">
-              {isOnline ? 'Connected' : 'Offline Mode'}
+              {isOnline ? 'Network Connected' : 'Network Offline'}
             </p>
           </div>
         </div>
@@ -60,12 +62,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         </nav>
         
         <div className="px-6 py-4 mx-4 mb-4 bg-slate-800/50 rounded-2xl border border-slate-700/50">
-           <p className="text-[8px] font-black uppercase text-slate-500 tracking-widest mb-1">Local PC Storage</p>
+           <p className="text-[8px] font-black uppercase text-slate-500 tracking-widest mb-1">
+             {isCloudEnabled ? 'Cloud Database' : 'Local PC Storage'}
+           </p>
            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                 <span className="animate-pulse">●</span> Data Synced
+              <span className={`text-[10px] font-bold flex items-center gap-1 ${isCloudEnabled ? 'text-indigo-400' : 'text-emerald-400'}`}>
+                 <span className={isCloudEnabled ? 'animate-pulse' : ''}>●</span> 
+                 {isCloudEnabled ? 'Supabase Sync On' : 'Local Sync Only'}
               </span>
-              <span className="text-[10px] text-slate-500">HD: 100%</span>
+              <span className="text-[10px] text-slate-500">{isCloudEnabled ? 'LIVE' : 'DISK'}</span>
            </div>
         </div>
 
