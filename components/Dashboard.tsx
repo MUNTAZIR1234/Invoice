@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tenant, Property, Invoice, Expense } from '../types';
 import { 
@@ -27,6 +28,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ tenants, properties, invoi
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
   const netIncome = totalRevenue - totalExpenses;
   const occupancy = properties.length > 0 ? (tenants.length / properties.length) * 100 : 0;
+  
+  const pendingRevenue = invoices
+    .filter(inv => inv.status !== 'Paid')
+    .reduce((s, i) => s + i.totalAmount, 0);
 
   const getMonthlyData = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -81,7 +86,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ tenants, properties, invoi
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard title="Total Revenue" value={`₹${totalRevenue.toLocaleString()}`} icon="💰" color="text-indigo-600" />
         <StatCard title="Total Expenses" value={`₹${totalExpenses.toLocaleString()}`} icon="💸" color="text-rose-600" />
-        <StatCard title="Net Income" value={`₹${netIncome.toLocaleString()}`} icon="📈" color="text-emerald-600" />
+        <StatCard title="Pending Collections" value={`₹${pendingRevenue.toLocaleString()}`} icon="⏳" color="text-amber-600" />
         <StatCard title="Occupancy" value={`${occupancy.toFixed(0)}%`} icon="🏢" color="text-slate-900" />
       </div>
 

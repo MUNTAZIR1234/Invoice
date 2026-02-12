@@ -1,15 +1,33 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// Standardize API Key retrieval for both development and production
 const getAI = () => {
   const apiKey = process.env.API_KEY;
-  
   if (!apiKey) {
-    throw new Error("Gemini API Key is missing. Please set API_KEY in your environment variables.");
+    throw new Error("Gemini API Key is missing.");
   }
-  
   return new GoogleGenAI({ apiKey });
+};
+
+export const generateWhatsAppReminder = async (tenantName: string, amount: number, id: string, dueDate: string) => {
+  const ai = getAI();
+  const prompt = `Draft a very short, polite WhatsApp message for a tenant named ${tenantName} regarding Invoice ${id}. 
+  The amount is ₹${amount.toLocaleString()} and it was due on ${dueDate}. 
+  Keep it professional, friendly, and under 40 words. Mention the bank details are in the PDF.`;
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        systemInstruction: "You are an assistant for Queens Chambers property management. Your tone is respectful but firm regarding payments."
+      }
+    });
+    return response.text || "";
+  } catch (error) {
+    console.error("Gemini Error:", error);
+    return `Dear ${tenantName}, friendly reminder for invoice ${id} of ₹${amount}. Please check your email for the PDF. Thanks!`;
+  }
 };
 
 export const generateCommunication = async (tenantName: string, amount: number) => {
