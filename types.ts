@@ -1,4 +1,3 @@
-
 export type PropertyType = 'Flat' | 'Garage' | 'Godown';
 export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'Overdue';
 
@@ -17,8 +16,6 @@ export interface Tenant {
   address: string;
   propertyId: string;
   status: 'Active' | 'Former';
-  rentAmount: number;
-  maintenanceAmount: number;
 }
 
 export interface InvoiceItem {

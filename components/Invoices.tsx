@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Invoice, Tenant, InvoiceItem, Property, CompanyInfo, InvoiceStatus } from '../types';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { generateWhatsAppReminder } from '../services/geminiService';
 
 interface InvoicesProps {
   invoices: Invoice[];
@@ -58,7 +57,6 @@ const DEFAULT_ITEMS: InvoiceItem[] = [
 
 export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, properties, company, setInvoices }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isReminding, setIsReminding] = useState<string | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [formData, setFormData] = useState<Partial<Invoice>>({
     tenantId: '',
@@ -70,81 +68,15 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
     dateOfReceipt: ''
   });
 
-  const getNextInvoiceId = (customOffset: number = 0) => {
-    if (!invoices || invoices.length === 0) return `INV-${String(1 + customOffset).padStart(3, '0')}`;
+  const getNextInvoiceId = () => {
+    if (!invoices || invoices.length === 0) return 'INV-001';
     const ids = invoices.map(inv => {
       const match = inv.id.match(/\d+/);
       return match ? parseInt(match[0], 10) : 0;
     });
     const maxId = Math.max(...ids);
-    const nextId = maxId + 1 + customOffset;
+    const nextId = maxId + 1;
     return `INV-${String(nextId).padStart(3, '0')}`;
-  };
-
-  const handleBatchGenerate = () => {
-    const activeTenants = tenants.filter(t => t.status === 'Active');
-    if (activeTenants.length === 0) {
-      alert("No active tenants found to generate invoices for.");
-      return;
-    }
-
-    if (!confirm(`Generate draft invoices for ${activeTenants.length} tenants?`)) return;
-
-    const newInvoices: Invoice[] = activeTenants.map((tenant, index) => {
-      const items: InvoiceItem[] = [
-        { description: 'Rent charges', amount: tenant.rentAmount || 0 },
-        { description: 'Repair and Municipal tax', amount: tenant.maintenanceAmount || 0 },
-        { description: 'Service charges for common area', amount: 0 }
-      ];
-      const total = items.reduce((s, i) => s + i.amount, 0);
-
-      return {
-        id: getNextInvoiceId(index),
-        tenantId: tenant.id,
-        items,
-        totalAmount: total,
-        createdAt: new Date().toISOString().split('T')[0],
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'Draft',
-        invoiceType: 'Rent Invoice',
-        billingPeriod: getAutomatedCycle(),
-        notes: DEFAULT_NOTES
-      };
-    });
-
-    setInvoices(prev => [...newInvoices, ...prev]);
-    alert(`Successfully generated ${newInvoices.length} draft invoices.`);
-  };
-
-  const handleRemind = async (invoice: Invoice) => {
-    const tenant = tenants.find(t => t.id === invoice.tenantId);
-    if (!tenant?.phone) {
-      alert("No phone number found for this tenant.");
-      return;
-    }
-
-    setIsReminding(invoice.id);
-    try {
-      const message = await generateWhatsAppReminder(
-        tenant.name, 
-        invoice.totalAmount, 
-        invoice.id, 
-        formatDateDDMMYYYY(invoice.dueDate)
-      );
-      
-      const cleanPhone = tenant.phone.replace(/\D/g, '');
-      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, '_blank');
-      
-      // Mark as sent if it was draft
-      if (invoice.status === 'Draft') {
-        handleStatusChange(invoice.id, 'Sent');
-      }
-    } catch (err) {
-      alert("Could not generate reminder.");
-    } finally {
-      setIsReminding(null);
-    }
   };
 
   const handleStatusChange = (id: string, newStatus: InvoiceStatus) => {
@@ -337,20 +269,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
           <h2 className="text-3xl font-black text-slate-900">Invoices</h2>
           <p className="text-slate-500 text-sm mt-1">Manage and track rental receivables.</p>
         </div>
-        <div className="flex gap-3">
-           <button 
-             onClick={handleBatchGenerate} 
-             className="bg-white border border-slate-200 text-indigo-600 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2"
-           >
-             ⚡ Auto-Generate Monthly
-           </button>
-           <button 
-             onClick={() => setIsModalOpen(true)} 
-             className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:scale-105 transition-transform"
-           >
-             New Invoice
-           </button>
-        </div>
+        <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:scale-105 transition-transform">New Invoice</button>
       </header>
 
       <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -404,17 +323,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                     </div>
                   </td>
                   <td className="px-8 py-5 text-right font-black text-indigo-600">₹{inv.totalAmount.toLocaleString()}</td>
-                  <td className="px-8 py-5 text-right flex items-center justify-end gap-2">
-                    {inv.status !== 'Paid' && (
-                       <button 
-                         onClick={() => handleRemind(inv)} 
-                         disabled={isReminding === inv.id}
-                         className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white p-2 rounded-xl transition-all disabled:opacity-50"
-                         title="Send WhatsApp Reminder"
-                       >
-                         {isReminding === inv.id ? '...' : '📲'}
-                       </button>
-                    )}
+                  <td className="px-8 py-5 text-right space-x-2">
                     <button onClick={() => handleEditClick(inv)} className="bg-slate-50 text-slate-500 hover:bg-slate-900 hover:text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Edit</button>
                     <button onClick={() => downloadPDF(inv)} className="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">PDF</button>
                     <button 
