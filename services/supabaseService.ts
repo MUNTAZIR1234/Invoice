@@ -1,5 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Tenant, Property, Invoice, Expense, CompanyInfo } from '../types';
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 export const isCloudEnabled = !!supabaseUrl && !!supabaseAnonKey;
 
 // Only initialize if keys are present
-export const supabase = isCloudEnabled 
+export const supabase: SupabaseClient | null = isCloudEnabled 
   ? createClient(supabaseUrl!, supabaseAnonKey!) 
   : null;
 
@@ -21,15 +21,15 @@ export const supabaseService = {
       supabase.from('properties').select('*'),
       supabase.from('invoices').select('*'),
       supabase.from('expenses').select('*'),
-      supabase.from('company').select('*').single()
+      supabase.from('company').select('*').maybeSingle()
     ]);
 
     return {
-      tenants: tenants.data || [],
-      properties: properties.data || [],
-      invoices: invoices.data || [],
-      expenses: expenses.data || [],
-      company: company.data || null
+      tenants: (tenants.data as Tenant[]) || [],
+      properties: (properties.data as Property[]) || [],
+      invoices: (invoices.data as Invoice[]) || [],
+      expenses: (expenses.data as Expense[]) || [],
+      company: (company.data as CompanyInfo) || null
     };
   },
 
