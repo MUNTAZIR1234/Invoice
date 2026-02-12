@@ -10,7 +10,7 @@ export default defineConfig({
     'process.env.SUPABASE_ANON_KEY': JSON.stringify(process.env.SUPABASE_ANON_KEY)
   },
   build: {
-    outDir: 'dist',
+    outDir: 'build',
     sourcemap: true,
     emptyOutDir: true
   },
