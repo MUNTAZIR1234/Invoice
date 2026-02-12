@@ -42,7 +42,9 @@ const numberToWordsIndian = (num: number): string => {
 };
 
 const getAutomatedCycle = () => {
-  return "01 April 2026 to 30 September 2026";
+  const now = new Date();
+  const year = now.getFullYear();
+  return `01 April ${year} to 30 September ${year}`;
 };
 
 const DEFAULT_NOTES = "This invoice is monthly for six month invoice. If you pay full money we will accept.";
@@ -162,6 +164,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
+    doc.text(invoice.invoiceType.toUpperCase() + ':', 140, 50);
     doc.text('TENANT / BILL TO:', 15, 60);
     
     doc.setFontSize(12);
@@ -275,7 +278,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
             <tr>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">ID</th>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Tenant / Unit</th>
-              <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Creation Date</th>
+              <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Type</th>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Status</th>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400">Internal Tracking</th>
               <th className="px-8 py-4 text-[10px] font-black uppercase text-slate-400 text-right">Amount</th>
@@ -293,8 +296,8 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                     <p className="font-bold text-slate-800">{tenant?.name || 'Unknown'}</p>
                     <p className="text-[10px] text-slate-400 uppercase tracking-widest">{prop?.name || 'No Unit'}</p>
                   </td>
-                  <td className="px-8 py-5 text-sm font-medium text-slate-500">
-                    {formatDateDDMMYYYY(inv.createdAt)}
+                  <td className="px-8 py-5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{inv.invoiceType}</span>
                   </td>
                   <td className="px-8 py-5">
                     <select 
@@ -317,9 +320,6 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                             onChange={(e) => handleReceiptDateChange(inv.id, e.target.value)}
                             className="text-xs font-bold text-indigo-600 bg-transparent border-none p-0 outline-none focus:ring-0 cursor-pointer hover:underline"
                         />
-                        {!inv.dateOfReceipt && (
-                            <span className="text-[9px] text-amber-500 font-bold italic">Not received yet</span>
-                        )}
                     </div>
                   </td>
                   <td className="px-8 py-5 text-right font-black text-indigo-600">₹{inv.totalAmount.toLocaleString()}</td>
@@ -351,12 +351,27 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
           <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-in overflow-hidden">
             <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <div>
-                <h3 className="text-xl font-black">{editingInvoice ? 'Edit Invoice' : 'Generate Invoice'}</h3>
-                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">Standard Billing Protocol</p>
+                <h3 className="text-xl font-black">{editingInvoice ? 'Edit Document' : 'Generate Document'}</h3>
+                <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">Protocol compliant processing</p>
               </div>
               <button onClick={closeModal} className="text-slate-400 hover:text-slate-900 transition-colors text-xl">✕</button>
             </div>
-            <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+                {(['Rent Invoice', 'Tax Receipt'] as const).map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setFormData({...formData, invoiceType: type})}
+                    className={`px-4 py-2 rounded-lg text-xs font-black uppercase transition-all ${
+                      formData.invoiceType === type ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="text-xs font-black uppercase text-slate-400 block mb-2">Select Tenant</label>
@@ -373,17 +388,16 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                  <label className="text-xs font-black uppercase text-indigo-400 block mb-2">Receipt Date (Tracking Only)</label>
+                  <label className="text-xs font-black uppercase text-indigo-400 block mb-2">Internal Receipt Date</label>
                   <input 
                     type="date" 
                     className="w-full bg-transparent outline-none font-bold text-indigo-600" 
                     value={formData.dateOfReceipt || ''} 
                     onChange={e => setFormData({...formData, dateOfReceipt: e.target.value})} 
                   />
-                  <p className="text-[8px] text-indigo-300 font-bold uppercase mt-2">* Not visible on printed invoice</p>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase text-slate-400 block mb-2">Invoice Status</label>
+                  <label className="text-xs font-black uppercase text-slate-400 block mb-2">Initial Status</label>
                   <select 
                     className="w-full p-4 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none font-bold text-slate-700" 
                     value={formData.status} 
@@ -407,9 +421,8 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                     <div key={idx} className="flex gap-4">
                       <input 
                         placeholder="Description" 
-                        className="flex-1 p-3 bg-slate-50 rounded-lg border border-transparent focus:border-indigo-500 outline-none text-sm font-bold text-slate-700 disabled:bg-slate-100 disabled:text-slate-400" 
+                        className="flex-1 p-3 bg-slate-50 rounded-lg border border-transparent focus:border-indigo-500 outline-none text-sm font-bold text-slate-700" 
                         value={item.description} 
-                        disabled={idx < 3}
                         onChange={e => {
                           const newItems = [...formData.items!];
                           newItems[idx].description = e.target.value;
@@ -418,7 +431,6 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                       />
                       <input 
                         type="number" 
-                        step="any" 
                         placeholder="0" 
                         className="w-32 p-3 bg-slate-50 rounded-lg border border-transparent focus:border-indigo-500 outline-none text-right font-black text-indigo-600" 
                         value={item.amount === 0 ? '' : item.amount} 
@@ -428,36 +440,33 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                           setFormData({...formData, items: newItems});
                         }} 
                       />
-                      {idx >= 3 && (
+                      {idx > 2 && (
                         <button type="button" onClick={() => {
                           const newItems = formData.items!.filter((_, i) => i !== idx);
                           setFormData({...formData, items: newItems});
                         }} className="text-rose-400 hover:text-rose-600 transition-colors">✕</button>
                       )}
-                      {idx < 3 && <div className="w-4"></div>}
                     </div>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-black uppercase text-slate-400 block mb-2">Additional Notes / Remarks</label>
+                <label className="text-xs font-black uppercase text-slate-400 block mb-2">Additional Notes</label>
                 <textarea 
-                  placeholder="Enter any additional information for the tenant..." 
-                  className="w-full p-4 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none text-sm font-medium text-slate-700 min-h-[100px]" 
+                  className="w-full p-4 bg-slate-50 rounded-xl border border-transparent focus:border-indigo-500 outline-none text-sm font-medium text-slate-700 min-h-[80px]" 
                   value={formData.notes} 
                   onChange={e => setFormData({...formData, notes: e.target.value})}
                 />
-                <p className="text-[9px] text-slate-400 font-bold uppercase mt-2">Visible on PDF Invoice</p>
               </div>
 
               <div className="pt-6 border-t border-slate-100">
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-xs font-black uppercase text-slate-400">Total Payable Amount</span>
+                  <span className="text-xs font-black uppercase text-slate-400">Grand Total Payable</span>
                   <span className="text-3xl font-black text-slate-900">₹{(formData.items?.reduce((s, i) => s + i.amount, 0) || 0).toLocaleString()}</span>
                 </div>
-                <button type="submit" className="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:translate-y-[-2px] transition-all active:translate-y-[0px]">
-                  {editingInvoice ? 'Save Changes' : 'Generate Final Invoice'}
+                <button type="submit" className="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all">
+                  {editingInvoice ? 'Save Changes' : 'Generate Document'}
                 </button>
               </div>
             </form>
