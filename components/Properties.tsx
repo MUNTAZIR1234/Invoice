@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Property, PropertyType, Tenant } from '../types';
+import { tursoService } from '../services/tursoService';
 
 interface PropertiesProps {
   properties: Property[];
@@ -37,6 +38,7 @@ export const Properties: React.FC<PropertiesProps> = ({ properties, setPropertie
     const propName = properties.find(p => String(p.id) === targetId)?.name || "this unit";
     if (window.confirm(`Are you sure you want to delete "${propName}"? This action cannot be reversed.`)) {
       setProperties(prev => prev.filter(p => String(p.id) !== targetId));
+      tursoService.deleteRecord('properties', targetId);
     }
   };
 

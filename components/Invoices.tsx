@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Invoice, Tenant, InvoiceItem, Property, CompanyInfo, InvoiceStatus } from '../types';
+import { tursoService } from '../services/tursoService';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -104,6 +105,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
   const handleDeleteClick = (id: string) => {
     if (confirm(`Are you sure you want to delete invoice ${id}? This action cannot be undone.`)) {
       setInvoices(prev => prev.filter(inv => inv.id !== id));
+      tursoService.deleteRecord('invoices', id);
     }
   };
 

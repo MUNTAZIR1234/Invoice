@@ -11,7 +11,7 @@ import { Reports } from './components/Reports';
 import { SystemSettings } from './components/SystemSettings';
 import { Login } from './components/Login';
 import { Tenant, Property, Invoice, CompanyInfo, Expense } from './types';
-import { supabaseService, isCloudEnabled } from './services/supabaseService';
+import { tursoService } from './services/tursoService';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -30,25 +30,53 @@ const App: React.FC = () => {
     email: 'ac.queenschambers@gmail.com' 
   });
 
+  // Inactivity Timer (5 minutes)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setIsAuthenticated(false);
+        localStorage.setItem('isLoggedIn', 'false');
+      }, 5 * 60 * 1000); // 5 minutes
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    events.forEach(event => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    resetTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(event => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [isAuthenticated]);
+
   // Initial Data Load
   useEffect(() => {
     const initData = async () => {
       setIsLoading(true);
-      if (isCloudEnabled) {
-        try {
-          const data = await supabaseService.fetchAll();
-          if (data) {
-            setTenants(data.tenants);
-            setProperties(data.properties);
-            setInvoices(data.invoices);
-            setExpenses(data.expenses);
-            if (data.company) setCompany(data.company);
-          }
-        } catch (err) {
-          console.error("Cloud fetch failed, using local fallback", err);
+      try {
+        const data = await tursoService.fetchAll();
+        if (data) {
+          setTenants(data.tenants || []);
+          setProperties(data.properties || []);
+          setInvoices(data.invoices || []);
+          setExpenses(data.expenses || []);
+          if (data.company) setCompany(data.company);
+        } else {
           loadLocalFallback();
         }
-      } else {
+      } catch (err) {
+        console.error("Cloud fetch failed, using local fallback", err);
         loadLocalFallback();
       }
       setIsLoading(false);
@@ -81,14 +109,12 @@ const App: React.FC = () => {
       localStorage.setItem('company', JSON.stringify(company));
       localStorage.setItem('isLoggedIn', isAuthenticated.toString());
 
-      if (isCloudEnabled) {
-        // Debounced or simple sync
-        supabaseService.syncData('tenants', tenants);
-        supabaseService.syncData('properties', properties);
-        supabaseService.syncData('invoices', invoices);
-        supabaseService.syncData('expenses', expenses);
-        supabaseService.syncData('company', [company]); // wrap in array for upsert
-      }
+      // Sync to Turso
+      tursoService.syncData('tenants', tenants);
+      tursoService.syncData('properties', properties);
+      tursoService.syncData('invoices', invoices);
+      tursoService.syncData('expenses', expenses);
+      tursoService.syncData('company', [company]); // wrap in array for upsert
     }
   }, [tenants, properties, invoices, expenses, company, isAuthenticated, isLoading]);
 

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Expense, Property } from '../types';
+import { tursoService } from '../services/tursoService';
 
 interface ExpensesProps {
   expenses: Expense[];
@@ -35,6 +36,13 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, properties, setExp
     setNewExpense({ propertyId: '', amount: 0, category: 'Maintenance', date: new Date().toISOString().split('T')[0], description: '' });
   };
 
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this expense record?')) {
+      setExpenses(prev => prev.filter(e => e.id !== id));
+      tursoService.deleteRecord('expenses', id);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <header className="flex justify-between items-center">
@@ -59,6 +67,7 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, properties, setExp
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Description</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Amount</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Date</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
@@ -76,6 +85,14 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, properties, setExp
                   <td className="px-6 py-4 text-sm text-slate-500">{exp.description}</td>
                   <td className="px-6 py-4 text-right font-bold text-rose-600">-${exp.amount.toLocaleString()}</td>
                   <td className="px-6 py-4 text-right text-sm text-slate-400">{exp.date}</td>
+                  <td className="px-6 py-4 text-right">
+                    <button 
+                      onClick={() => handleDelete(exp.id)}
+                      className="text-rose-400 hover:text-rose-600 transition-colors text-xs font-bold uppercase tracking-widest"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               );
             })}

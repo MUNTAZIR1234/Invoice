@@ -1,6 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Tenant, Property } from '../types';
+import { tursoService } from '../services/tursoService';
 
 interface TenantsProps {
   tenants: Tenant[];
@@ -23,6 +24,7 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to remove ${name}? This will remove them from the registry but keep existing invoices.`)) {
       setTenants(prev => prev.filter(t => t.id !== id));
+      tursoService.deleteRecord('tenants', id);
     }
   };
 

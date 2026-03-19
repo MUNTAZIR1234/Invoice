@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { isCloudEnabled } from '../services/supabaseService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -63,14 +62,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         
         <div className="px-6 py-4 mx-4 mb-4 bg-slate-800/50 rounded-2xl border border-slate-700/50">
            <p className="text-[8px] font-black uppercase text-slate-500 tracking-widest mb-1">
-             {isCloudEnabled ? 'Cloud Database' : 'Local PC Storage'}
+             Turso Database
            </p>
            <div className="flex items-center justify-between">
-              <span className={`text-[10px] font-bold flex items-center gap-1 ${isCloudEnabled ? 'text-indigo-400' : 'text-emerald-400'}`}>
-                 <span className={isCloudEnabled ? 'animate-pulse' : ''}>●</span> 
-                 {isCloudEnabled ? 'Supabase Sync On' : 'Local Sync Only'}
+              <span className={`text-[10px] font-bold flex items-center gap-1 text-indigo-400`}>
+                 <span className="animate-pulse">●</span> 
+                 Turso Sync On
               </span>
-              <span className="text-[10px] text-slate-500">{isCloudEnabled ? 'LIVE' : 'DISK'}</span>
+              <span className="text-[10px] text-slate-500">LIVE</span>
            </div>
         </div>
 
