@@ -137,7 +137,7 @@ export const Reports: React.FC<ReportsProps> = ({ tenants, properties, invoices,
                 const prop = properties.find(p => p.id === t.propertyId);
                 return (
                   <tr key={t.id}>
-                    <td className="p-3 border border-slate-200 text-sm font-bold">{t.name}</td>
+                    <td className="p-3 border border-slate-200 text-sm font-bold break-words max-w-[200px]">{t.name}</td>
                     <td className="p-3 border border-slate-200 text-sm">{t.address || 'N/A'}</td>
                     <td className="p-3 border border-slate-200 text-sm whitespace-nowrap">{prop ? `${prop.type} ${prop.name}` : 'N/A'}</td>
                     <td className="p-3 border border-slate-200 text-sm">{t.email}<br/><span className="text-xs text-slate-400">{t.phone}</span></td>
@@ -193,7 +193,7 @@ export const Reports: React.FC<ReportsProps> = ({ tenants, properties, invoices,
                   <td className="p-3 border border-slate-200 text-xs font-mono">{i.id}</td>
                   <td className="p-3 border border-slate-200 text-sm">{formatDate(i.createdAt)}</td>
                   <td className="p-3 border border-slate-200 text-sm font-bold text-indigo-600">{formatDate(i.dateOfReceipt)}</td>
-                  <td className="p-3 border border-slate-200 text-sm">{tenants.find(t => t.id === i.tenantId)?.name || 'Unknown'}</td>
+                  <td className="p-3 border border-slate-200 text-sm break-words max-w-[200px]">{tenants.find(t => t.id === i.tenantId)?.name || 'Unknown'}</td>
                   <td className="p-3 border border-slate-200 text-sm font-bold text-right">₹{i.totalAmount.toLocaleString()}</td>
                   <td className="p-3 border border-slate-200 text-sm">
                     <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${

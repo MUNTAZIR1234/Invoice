@@ -170,15 +170,19 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
     doc.text('TENANT / BILL TO:', 15, 60);
     
     doc.setFontSize(12);
-    doc.text(tenant?.name || 'N/A', 15, 68);
+    const tenantName = tenant?.name || 'N/A';
+    const splitTenantName = doc.splitTextToSize(tenantName, 90);
+    doc.text(splitTenantName, 15, 68);
+    
+    const addressStartY = 68 + (splitTenantName.length * 6);
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     const tenantAddress = tenant?.address || 'Address not provided';
     const splitTenantAddress = doc.splitTextToSize(tenantAddress, 90);
-    doc.text(splitTenantAddress, 15, 74);
+    doc.text(splitTenantAddress, 15, addressStartY);
     
-    const nextY = 74 + (splitTenantAddress.length * 5);
+    const nextY = addressStartY + (splitTenantAddress.length * 5);
     doc.setFont('helvetica', 'bold');
     doc.text(`Rented Unit: ${prop ? `${prop.type} ${prop.name}` : 'N/A'}`, 15, nextY + 2);
 
@@ -295,7 +299,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
                 <tr key={inv.id} className="hover:bg-slate-50 transition-colors group">
                   <td className="px-8 py-5 font-bold text-slate-900">{inv.id}</td>
                   <td className="px-8 py-5">
-                    <p className="font-bold text-slate-800">{tenant?.name || 'Unknown'}</p>
+                    <p className="font-bold text-slate-800 break-words max-w-[200px]">{tenant?.name || 'Unknown'}</p>
                     <p className="text-[10px] text-slate-400 uppercase tracking-widest">{prop?.name || 'No Unit'}</p>
                   </td>
                   <td className="px-8 py-5">

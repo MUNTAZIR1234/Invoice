@@ -162,7 +162,7 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
           <tbody className="divide-y divide-slate-50">
             {tenants.map(t => (
               <tr key={t.id} className="hover:bg-slate-50 transition-colors group">
-                <td className="px-8 py-5 font-bold text-slate-900">{t.name}</td>
+                <td className="px-8 py-5 font-bold text-slate-900 break-words max-w-[200px]">{t.name}</td>
                 <td className="px-8 py-5 text-slate-600 font-medium">
                   {properties.find(p => p.id === t.propertyId) ? (
                     (() => {
