@@ -1,6 +1,5 @@
 
 import express, { Request, Response } from 'express';
-import { createServer as createViteServer } from 'vite';
 import { createClient } from '@libsql/client';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -182,6 +181,7 @@ app.delete('/api/delete/:type/:id', async (req: Request, res: Response) => {
 
 // Vite middleware for development
 if (process.env.NODE_ENV !== 'production') {
+  const { createServer: createViteServer } = await import('vite');
   const vite = await createViteServer({
     server: { middlewareMode: true },
     appType: 'spa',

@@ -10,6 +10,7 @@ interface PropertiesProps {
 
 export const Properties: React.FC<PropertiesProps> = ({ properties, setProperties, tenants }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [formData, setFormData] = useState<Partial<Property>>({ name: '', type: 'Flat' });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +107,11 @@ export const Properties: React.FC<PropertiesProps> = ({ properties, setPropertie
     e.target.value = '';
   };
 
+  const filteredProperties = properties.filter(p => {
+    const searchStr = `${p.name} ${p.type} ${p.id}`.toLowerCase();
+    return searchStr.includes(searchTerm.toLowerCase());
+  });
+
   return (
     <div className="space-y-6 animate-in">
       <header className="flex justify-between items-center">
@@ -113,7 +119,17 @@ export const Properties: React.FC<PropertiesProps> = ({ properties, setPropertie
           <h2 className="text-3xl font-black text-slate-900">Properties</h2>
           <p className="text-sm text-slate-500">Asset portfolio and unit inventory.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Search properties..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:border-indigo-500 transition-all w-64 shadow-sm"
+            />
+          </div>
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -150,7 +166,7 @@ export const Properties: React.FC<PropertiesProps> = ({ properties, setPropertie
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {properties.map(p => {
+            {filteredProperties.map(p => {
               const targetId = String(p.id).trim();
               const isOccupied = tenants.some(t => t.propertyId && String(t.propertyId).trim() === targetId);
               return (

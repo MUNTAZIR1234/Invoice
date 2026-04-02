@@ -58,6 +58,7 @@ const DEFAULT_ITEMS: InvoiceItem[] = [
 
 export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, properties, company, setInvoices }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [formData, setFormData] = useState<Partial<Invoice>>({
     tenantId: '',
@@ -150,18 +151,19 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
     const prop = properties.find(p => p.id === tenant?.propertyId);
     const doc = new jsPDF();
     
-    doc.setFillColor(15, 23, 42); 
-    doc.rect(0, 0, 210, 45, 'F');
-    doc.setTextColor(129, 140, 248); 
+    doc.setTextColor(79, 70, 229); 
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.text(company.name, 15, 20);
     
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(100, 116, 139);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.text("5th Floor, Flat A, 89 Maharshi Karve Road, Marine Lines, Mumbai - 400020", 15, 30);
     doc.text(`Email: ${company.email}`, 15, 35);
+
+    doc.setDrawColor(241, 245, 249);
+    doc.line(15, 40, 195, 40);
 
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(10);
@@ -268,6 +270,12 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
     }
   };
 
+  const filteredInvoices = invoices.filter(inv => {
+    const tenant = tenants.find(t => t.id === inv.tenantId);
+    const searchStr = `${inv.id} ${tenant?.name || ''} ${inv.invoiceType}`.toLowerCase();
+    return searchStr.includes(searchTerm.toLowerCase());
+  });
+
   return (
     <div className="space-y-6">
       <header className="flex justify-between items-center">
@@ -275,7 +283,19 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
           <h2 className="text-3xl font-black text-slate-900">Invoices</h2>
           <p className="text-slate-500 text-sm mt-1">Manage and track rental receivables.</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:scale-105 transition-transform">New Invoice</button>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Search invoices..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:border-indigo-500 transition-all w-64 shadow-sm"
+            />
+          </div>
+          <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:scale-105 transition-transform">New Invoice</button>
+        </div>
       </header>
 
       <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -292,7 +312,7 @@ export const Invoices: React.FC<InvoicesProps> = ({ invoices, tenants, propertie
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {invoices.map(inv => {
+            {filteredInvoices.map(inv => {
               const tenant = tenants.find(t => t.id === inv.tenantId);
               const prop = properties.find(p => p.id === tenant?.propertyId);
               return (

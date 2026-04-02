@@ -11,6 +11,7 @@ interface TenantsProps {
 
 export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenants }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [formData, setFormData] = useState<Partial<Tenant>>({ name: '', email: '', phone: '', address: '', propertyId: '', status: 'Active' });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,6 +122,11 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
     e.target.value = '';
   };
 
+  const filteredTenants = tenants.filter(t => {
+    const searchStr = `${t.name} ${t.email} ${t.phone} ${t.address}`.toLowerCase();
+    return searchStr.includes(searchTerm.toLowerCase());
+  });
+
   return (
     <div className="space-y-6">
       <header className="flex justify-between items-center">
@@ -128,7 +134,17 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
           <h2 className="text-3xl font-black text-slate-900">Tenants</h2>
           <p className="text-sm text-slate-500">Registry of all active and former residents.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Search tenants..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium outline-none focus:border-indigo-500 transition-all w-64 shadow-sm"
+            />
+          </div>
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -160,7 +176,7 @@ export const Tenants: React.FC<TenantsProps> = ({ tenants, properties, setTenant
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {tenants.map(t => (
+            {filteredTenants.map(t => (
               <tr key={t.id} className="hover:bg-slate-50 transition-colors group">
                 <td className="px-8 py-5 font-bold text-slate-900 break-words max-w-[200px]">{t.name}</td>
                 <td className="px-8 py-5 text-slate-600 font-medium">
